@@ -13,9 +13,28 @@ It provides access to multiples Objects for automated synchronization though Spl
 
 ## Installation
 
-* Download the latest stable version here : [Splash Modules](http://www.splashsync.com/en/modules/)
+* Download the Mobiloweb version [here](https://google.com)
 * Copy module contents on PrestaShop module's folder (modules/splashsync) 
 * Enable & Configure the module from Administration Module's page.
+* Set the `PS_PRODUCT_SHORT_DESC_LIMIT` column to **2000** in the `ps_configuration` table
+  
+```sql
+UPDATE `ps_configuration`
+SET value = "2000"
+WHERE name = "PS_PRODUCT_SHORT_DESC_LIMIT";
+```
+
+## JAMarketplace support
+
+If enabled, you'll need to add the following in **classes/Product.php** (receiver only):
+
+`public $ja_shop_name;` at line ~230
+
+`'ja_shop_name' => ['type' => self::TYPE_STRING, 'validate' => 'isString'],` in the fields at line 324
+
+## Custom configuration by Mobiloweb
+
+![Configuration](https://i.imgur.com/DIfWfVs.png)
 
 ## Requirements
 
