@@ -943,22 +943,24 @@ class SplashSync extends Module
         $this->toggleJAMarketplaceSupport();
 
         /* Create splash_temp category if it doesn't exists */
-        $lang = Configuration::get('PS_LANG_DEFAULT');
-        $tempCategory = \Category::searchByName($lang, 'Splash temp', true, true);
+        if (Configuration::get('SPLASHMBW_TEMP_CATEGORY')) {
+            $lang = Configuration::get('PS_LANG_DEFAULT');
+            $tempCategory = \Category::searchByName($lang, 'Splash temp', true, true);
 
-        if (!$tempCategory) {
-            $category = new \Category();
-            $category->name[$lang] = 'Splash temp';
-            $category->description[$lang] = 'Splash temp category';
-            $category->link_rewrite[$lang] = 'splash_temp';
+            if (!$tempCategory) {
+                $category = new \Category();
+                $category->name[$lang] = 'Splash temp';
+                $category->description[$lang] = 'Splash temp category';
+                $category->link_rewrite[$lang] = 'splash_temp';
 
-            $category->id_parent = (int)Configuration::get('PS_HOME_CATEGORY');
-            $category->active = 0;
-            $category->add();
+                $category->id_parent = (int)Configuration::get('PS_HOME_CATEGORY');
+                $category->active = 0;
+                $category->add();
 
-            $tempCategory = (array)$category;
+                $tempCategory = (array)$category;
+            }
         }
-
+        
         //====================================================================//
         // Update Oders Status Values
         if (\Splash\Local\Services\OrderStatusManager::isAllowedWrite()) {
