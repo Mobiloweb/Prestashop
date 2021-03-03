@@ -3,7 +3,7 @@
 /*
  *  This file is part of SplashSync Project.
  *
- *  Copyright (C) 2015-2021 Splash Sync  <www.splashsync.com>
+ *  Copyright (C) 2015-2020 Splash Sync  <www.splashsync.com>
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,6 +18,7 @@ namespace Splash\Local\Services;
 use ArrayObject;
 use Category;
 use Product;
+use Splash\Client\Splash;
 
 /**
  * Product Categories Manager
@@ -72,9 +73,11 @@ class CategoryManager
         //====================================================================//
         // Load Product Current Categories List
         $current = self::getProductCategories($prd->id, $lang, $field);
+
         //====================================================================//
         // Detect ArrayObjects
         $data = ($data instanceof ArrayObject) ? $data->getArrayCopy() : $data;
+
         //====================================================================//
         // Walk on Slugs List for ADD
         foreach ($data as $dataField) {
@@ -92,11 +95,13 @@ class CategoryManager
         }
         //====================================================================//
         // Walk on Current List for REMOVE
-        foreach ($current as $categoryId => $dataField) {
-            //====================================================================//
-            // NOT Already Associated
-            if (!in_array($dataField, $data, true)) {
-                $prd->deleteCategory($categoryId);
+        if (\Configuration::get('SPLASHMBW_ERASE_CATEGORIES')) {
+            foreach ($current as $categoryId => $dataField) {
+                //====================================================================//
+                // NOT Already Associated
+                if (!in_array($dataField, $data, true)) {
+                    $prd->deleteCategory($categoryId);
+                }
             }
         }
     }
