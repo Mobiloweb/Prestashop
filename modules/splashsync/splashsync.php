@@ -3,7 +3,7 @@
 /*
  *  This file is part of SplashSync Project.
  *
- *  Copyright (C) 2015-2021 Splash Sync  <www.splashsync.com>
+ *  Copyright (C) 2015-2020 Splash Sync  <www.splashsync.com>
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,9 +12,6 @@
  *  For the full copyright and license information, please view the LICENSE
  *  file that was distributed with this source code.
  */
-
-// phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
-// phpcs:disable PSR1.Files.SideEffects
 
 /**
  * Splash Sync Prestahop Module - Noty Notifications
@@ -72,7 +69,7 @@ class SplashSync extends Module
         // Init Module Main Information Fields
         $this->name = 'splashsync';
         $this->tab = 'administration';
-        $this->version = '1.6.1';
+        $this->version = '1.5.5';
         $this->author = 'SplashSync';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => '1.7');
@@ -141,15 +138,15 @@ class SplashSync extends Module
         //====================================================================//
         // Register Module Customers Hooks
         if (!$this->registerHook('actionObjectCustomerAddAfter') ||
-                !$this->registerHook('actionObjectCustomerUpdateAfter') ||
-                !$this->registerHook('actionObjectCustomerDeleteAfter')) {
+            !$this->registerHook('actionObjectCustomerUpdateAfter') ||
+            !$this->registerHook('actionObjectCustomerDeleteAfter')) {
             return false;
         }
         //====================================================================//
         // Register Module Customers Address Hooks
         if (!$this->registerHook('actionObjectAddressAddAfter') ||
-                !$this->registerHook('actionObjectAddressUpdateAfter') ||
-                !$this->registerHook('actionObjectAddressDeleteAfter')) {
+            !$this->registerHook('actionObjectAddressUpdateAfter') ||
+            !$this->registerHook('actionObjectAddressDeleteAfter')) {
             return false;
         }
         //====================================================================//
@@ -159,64 +156,69 @@ class SplashSync extends Module
         }
         // Ps 1.6 => Notify on Footer
         if (\Tools::version_compare(_PS_VERSION_, "1.7", '<')
-                && !$this->registerHook('displayBackOfficeFooter')) {
+            && !$this->registerHook('displayBackOfficeFooter')) {
             return false;
         }
         // Ps 1.7 => Notify on Admin End Contents
         if (!\Tools::version_compare(_PS_VERSION_, "1.7", '<')
-                && !$this->registerHook('displayAdminEndContent')) {
+            && !$this->registerHook('displayAdminEndContent')) {
             return false;
         }
         //====================================================================//
         // Register Module Products Hooks
         if (!$this->registerHook('actionProductSave') ||
-                !$this->registerHook('actionProductAdd') ||
-                !$this->registerHook('actionObjectProductAddAfter') ||
-                !$this->registerHook('actionObjectProductUpdateAfter') ||
-                !$this->registerHook('actionUpdateQuantity') ||
-                !$this->registerHook('actionProductUpdate') ||
-                !$this->registerHook('actionProductDelete')) {
+            !$this->registerHook('actionProductAdd') ||
+            !$this->registerHook('actionObjectProductAddAfter') ||
+            !$this->registerHook('actionObjectProductUpdateAfter') ||
+            !$this->registerHook('actionUpdateQuantity') ||
+            !$this->registerHook('actionProductUpdate') ||
+            !$this->registerHook('actionProductDelete')) {
             return false;
         }
         //====================================================================//
         // Register Module Products Attributes Hooks
         if (!$this->registerHook('actionObjectProductAddAfter') ||
-                !$this->registerHook('actionObjectProductUpdateAfter') ||
-                !$this->registerHook('actionObjectProductDeleteAfter') ||
-                !$this->registerHook('actionProductAttributeDelete')) {
+            !$this->registerHook('actionObjectProductUpdateAfter') ||
+            !$this->registerHook('actionObjectProductDeleteAfter') ||
+            !$this->registerHook('actionProductAttributeDelete')) {
             return false;
         }
         if (!$this->registerHook('actionObjectCombinationAddAfter') ||
-                !$this->registerHook('actionObjectCombinationUpdateAfter') ||
-                !$this->registerHook('actionObjectCombinationDeleteAfter')) {
+            !$this->registerHook('actionObjectCombinationUpdateAfter') ||
+            !$this->registerHook('actionObjectCombinationDeleteAfter')) {
             return false;
         }
         //====================================================================//
         // Register Module Category Hooks
         if (!$this->registerHook('actionCategoryAdd') ||
-                !$this->registerHook('actionCategoryUpdate') ||
-                !$this->registerHook('actionCategoryDelete')) {
+            !$this->registerHook('actionCategoryUpdate') ||
+            !$this->registerHook('actionCategoryDelete')) {
             return false;
         }
         //====================================================================//
         // Register Module Order Hooks
         if (!$this->registerHook('actionObjectOrderAddAfter') ||
-                !$this->registerHook('actionObjectOrderUpdateAfter') ||
-                !$this->registerHook('actionObjectOrderDeleteAfter')) {
+            !$this->registerHook('actionObjectOrderUpdateAfter') ||
+            !$this->registerHook('actionObjectOrderDeleteAfter')) {
             return false;
         }
         //====================================================================//
         // Register Module Invoice Hooks
         if (!$this->registerHook('actionObjectOrderInvoiceAddAfter') ||
-                !$this->registerHook('actionObjectOrderInvoiceUpdateAfter') ||
-                !$this->registerHook('actionObjectOrderInvoiceDeleteAfter')) {
+            !$this->registerHook('actionObjectOrderInvoiceUpdateAfter') ||
+            !$this->registerHook('actionObjectOrderInvoiceDeleteAfter')) {
             return false;
         }
         //====================================================================//
         // Register Module Order Slip Hooks
         if (!$this->registerHook('actionObjectOrderSlipAddAfter') ||
-                !$this->registerHook('actionObjectOrderSlipUpdateAfter') ||
-                !$this->registerHook('actionObjectOrderSlipDeleteAfter')) {
+            !$this->registerHook('actionObjectOrderSlipUpdateAfter') ||
+            !$this->registerHook('actionObjectOrderSlipDeleteAfter')) {
+            return false;
+        }
+        //====================================================================//
+        // MBW - Initialize default configuration
+        if (!Configuration::updateValue('SPLASHMBW_ERASE_CATEGORIES', true)) {
             return false;
         }
 
@@ -283,6 +285,10 @@ class SplashSync extends Module
         // Build Display Option Form Array
         $fieldsForm[] = $this->getOptionFormArray();
         //====================================================================//
+        //====================================================================//
+        // Build Display Mobiloweb Form Array
+        $fieldsForm[] = $this->getMobilowebFormArray();
+        //====================================================================//
         // Build Display Oders Form Array
         if (\Splash\Local\Services\OrderStatusManager::isAllowedWrite()) {
             $fieldsForm[] = $this->getOrderFormArray();
@@ -320,6 +326,12 @@ class SplashSync extends Module
         $helper->fields_value['SPLASH_SMART_NOTIFY'] = Configuration::get('SPLASH_SMART_NOTIFY');
         $helper->fields_value['SPLASH_SYNC_VIRTUAL'] = Configuration::get('SPLASH_SYNC_VIRTUAL');
         $helper->fields_value['SPLASH_SYNC_PACKS'] = Configuration::get('SPLASH_SYNC_PACKS');
+
+        /* MBW Custom values */
+        $helper->fields_value['SPLASHMBW_DESC_BEHAVIOR'] = Configuration::get('SPLASHMBW_DESC_BEHAVIOR');
+        $helper->fields_value['SPLASHMBW_ENABLE_JAMARKETPLACE'] = Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE');
+        $helper->fields_value['SPLASHMBW_ERASE_CATEGORIES'] = Configuration::get('SPLASHMBW_ERASE_CATEGORIES');
+        $helper->fields_value['SPLASHMBW_TEMP_CATEGORY'] = Configuration::get('SPLASHMBW_TEMP_CATEGORY');
 
         //====================================================================//
         // Load Oders Status Values
@@ -414,10 +426,10 @@ class SplashSync extends Module
     /**
      * Commit Change Actions or Other on OsWs Node Network
      *
-     * @param string       $objectType OsWs Object Type
-     * @param array|string $objectId   Object Id or Array of Object Id
-     * @param string       $action     Action to Commit
-     * @param string       $comment    Comment For this action
+     * @param string $objectType OsWs Object Type
+     * @param array|string $objectId Object Id or Array of Object Id
+     * @param string $action Action to Commit
+     * @param string $comment Comment For this action
      *
      * @return bool
      *
@@ -433,9 +445,13 @@ class SplashSync extends Module
         } elseif (is_array($objectId) && empty($objectId)) {
             return true;
         } elseif (is_array($objectId)) {
-            Splash\Client\Splash::log()->deb(
-                "Splash Commit => ".$objectType." Action = ".$action." Ids (x".implode(", ", $objectId).") ".$comment
-            );
+            Splash\Client\Splash::log()
+                ->deb(
+                    "Splash Commit => ".$objectType." Action = ".$action." Ids (x".implode(
+                        ", ",
+                        $objectId
+                    ).") ".$comment
+                );
         } else {
             return Splash\Client\Splash::log()
                 ->err("Splash Hook Error : Wrong Id List Given => ".print_r($objectId, true));
@@ -473,8 +489,8 @@ class SplashSync extends Module
      *
      * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      *
-     * @param string     $name
-     * @param string     $objectId
+     * @param string $name
+     * @param string $objectId
      * @param null|mixed $other
      *
      * @return bool
@@ -510,7 +526,7 @@ class SplashSync extends Module
             'label' => $this->l('Server Id'),
             'name' => 'SPLASH_WS_ID',
             'size' => 20,
-            'required' => true
+            'required' => true,
         );
         //====================================================================//
         // User Key
@@ -519,7 +535,7 @@ class SplashSync extends Module
             'label' => $this->l('Server Private Key'),
             'name' => 'SPLASH_WS_KEY',
             'size' => 60,
-            'required' => true
+            'required' => true,
         );
         //====================================================================//
         // Webservice SOAP Protocol
@@ -534,8 +550,8 @@ class SplashSync extends Module
                     array('id' => 'NuSOAP', 'name' => "NuSOAP Library"),
                 ),
                 'id' => 'id',
-                'name' => 'name'
-            )
+                'name' => 'name',
+            ),
         );
         //====================================================================//
         // Expert Mode
@@ -549,12 +565,12 @@ class SplashSync extends Module
                     array(
                         'id' => 'EXPERT',
                         'name' => $this->l('Yes'),
-                        'val' => '1'
+                        'val' => '1',
                     ),
                 ),
                 'id' => 'id',
-                'name' => 'name'
-            )
+                'name' => 'name',
+            ),
         );
         //====================================================================//
         // Server Host Url
@@ -564,7 +580,7 @@ class SplashSync extends Module
                 'label' => $this->l('Server Host Url'),
                 'name' => 'SPLASH_WS_HOST',
                 'size' => 60,
-                'required' => false
+                'required' => false,
             );
         }
         //====================================================================//
@@ -579,12 +595,12 @@ class SplashSync extends Module
                     array(
                         'id' => 'SMART_NOTIFY',
                         'name' => $this->l('On changes, display only warning & errors notifcations.'),
-                        'val' => '1'
+                        'val' => '1',
                     ),
                 ),
                 'id' => 'id',
-                'name' => 'name'
-            )
+                'name' => 'name',
+            ),
         );
         //====================================================================//
         // Init Form array
@@ -592,7 +608,7 @@ class SplashSync extends Module
         $output['form'] = array(
             'legend' => array('icon' => 'icon-key', 'title' => $this->l('Authentification Settings')),
             'input' => $fields,
-            'submit' => array('title' => $this->l('Save'), 'class' => 'btn btn-default pull-right')
+            'submit' => array('title' => $this->l('Save'), 'class' => 'btn btn-default pull-right'),
         );
 
         return $output;
@@ -621,8 +637,8 @@ class SplashSync extends Module
             'options' => array(
                 'query' => Employee::getEmployees(),
                 'id' => 'id_employee',
-                'name' => 'firstname'
-            )
+                'name' => 'firstname',
+            ),
         );
 
         //====================================================================//
@@ -636,12 +652,12 @@ class SplashSync extends Module
                     array(
                         'id' => 'VIRTUAL',
                         'name' => $this->l('Allow Synchronization of Virtual Products.'),
-                        'val' => '1'
+                        'val' => '1',
                     ),
                 ),
                 'id' => 'id',
-                'name' => 'name'
-            )
+                'name' => 'name',
+            ),
         );
 
         //====================================================================//
@@ -655,12 +671,12 @@ class SplashSync extends Module
                     array(
                         'id' => 'PACKS',
                         'name' => $this->l('Allow Synchronization of Products Packs.'),
-                        'val' => '1'
+                        'val' => '1',
                     ),
                 ),
                 'id' => 'id',
-                'name' => 'name'
-            )
+                'name' => 'name',
+            ),
         );
 
         //====================================================================//
@@ -669,13 +685,129 @@ class SplashSync extends Module
         $output['form'] = array(
             'legend' => array(
                 'icon' => 'icon-cogs',
-                'title' => $this->l('Local Settings')
+                'title' => $this->l('Local Settings'),
             ),
             'input' => $fields,
             'submit' => array(
                 'title' => $this->l('Save'),
-                'class' => 'btn btn-default pull-right'
-            )
+                'class' => 'btn btn-default pull-right',
+            ),
+        );
+
+        return $output;
+    }
+
+    /**
+     * Get Local Options Form Fields Array
+     *
+     * @return array
+     */
+    private function getMobilowebFormArray()
+    {
+        //====================================================================//
+        // Init Fields List
+        $fields = array();
+
+        //====================================================================//
+        // Change default description behavior
+        $fields[] = [
+            'type' => 'switch',
+            'label' => $this->l("Override default description behavior"),
+            'hint' => $this->l('Update the description and the short description fields only if they are empty'),
+            'name' => 'SPLASHMBW_DESC_BEHAVIOR',
+            'is_bool' => true,
+            'values' => [
+                [
+                    'id' => 'active_on',
+                    'value' => 1,
+                    'label' => $this->l('Yes'),
+                ],
+                [
+                    'id' => 'active_off',
+                    'value' => 0,
+                    'label' => $this->l('No'),
+                ],
+            ],
+        ];
+
+        $fields[] = [
+            'type' => 'switch',
+            'label' => $this->l("Enable JA Marketplace support"),
+            'hint' => $this->l(
+                'When creating a product from A to B, automatically link the product to the seller (Need to be 
+                enabled on both servers)'
+            ),
+            'name' => 'SPLASHMBW_ENABLE_JAMARKETPLACE',
+            'is_bool' => true,
+            'values' => [
+                [
+                    'id' => 'active_on',
+                    'value' => 1,
+                    'label' => $this->l('Yes'),
+                ],
+                [
+                    'id' => 'active_off',
+                    'value' => 0,
+                    'label' => $this->l('No'),
+                ],
+            ],
+        ];
+
+        $fields[] = [
+            'type' => 'switch',
+            'label' => $this->l("Delete the categories if they don't exists on both servers?"),
+            'hint' => $this->l(
+                "Choose if you want the categories to be deleted from this server's products if they don't match with the
+                remote one"
+            ),
+            'name' => 'SPLASHMBW_ERASE_CATEGORIES',
+            'is_bool' => true,
+            'values' => [
+                [
+                    'id' => 'active_on',
+                    'value' => 1,
+                    'label' => $this->l('Yes'),
+                ],
+                [
+                    'id' => 'active_off',
+                    'value' => 0,
+                    'label' => $this->l('No'),
+                ],
+            ],
+        ];
+
+        $fields[] = [
+            'type' => 'switch',
+            'label' => $this->l("Move new products to the 'metro_temp' category"),
+            'name' => 'SPLASHMBW_TEMP_CATEGORY',
+            'is_bool' => true,
+            'values' => [
+                [
+                    'id' => 'active_on',
+                    'value' => 1,
+                    'label' => $this->l('Yes'),
+                ],
+                [
+                    'id' => 'active_off',
+                    'value' => 0,
+                    'label' => $this->l('No'),
+                ],
+            ],
+        ];
+
+        //====================================================================//
+        // Init Form array
+        $output = array();
+        $output['form'] = array(
+            'legend' => array(
+                'icon' => 'icon-cogs',
+                'title' => $this->l('Mobiloweb settings'),
+            ),
+            'input' => $fields,
+            'submit' => array(
+                'title' => $this->l('Save'),
+                'class' => 'btn btn-default pull-right',
+            ),
         );
 
         return $output;
@@ -708,8 +840,8 @@ class SplashSync extends Module
                 'options' => array(
                     'query' => $psStates,
                     'id' => 'id_order_state',
-                    'name' => 'name'
-                )
+                    'name' => 'name',
+                ),
             );
         }
         //====================================================================//
@@ -718,13 +850,13 @@ class SplashSync extends Module
         $output['form'] = array(
             'legend' => array(
                 'icon' => 'icon-cogs',
-                'title' => $this->l('Orders Writing Settings')
+                'title' => $this->l('Orders Writing Settings'),
             ),
             'input' => $fields,
             'submit' => array(
                 'title' => $this->l('Save'),
-                'class' => 'btn btn-default pull-right'
-            )
+                'class' => 'btn btn-default pull-right',
+            ),
         );
 
         return $output;
@@ -789,6 +921,7 @@ class SplashSync extends Module
         if (null != $output) {
             return $output;
         }
+
         //====================================================================//
         // Update Configuration
         Configuration::updateValue('SPLASH_WS_EXPERT', trim($expert));
@@ -801,6 +934,31 @@ class SplashSync extends Module
         Configuration::updateValue('SPLASH_SYNC_VIRTUAL', trim(Tools::getValue('SPLASH_SYNC_VIRTUAL')));
         Configuration::updateValue('SPLASH_SYNC_PACKS', trim(Tools::getValue('SPLASH_SYNC_PACKS')));
 
+        /* MBW Custom values */
+        Configuration::updateValue('SPLASHMBW_DESC_BEHAVIOR', Tools::getValue('SPLASHMBW_DESC_BEHAVIOR'));
+        Configuration::updateValue('SPLASHMBW_ENABLE_JAMARKETPLACE', Tools::getValue('SPLASHMBW_ENABLE_JAMARKETPLACE'));
+        Configuration::updateValue('SPLASHMBW_ERASE_CATEGORIES', Tools::getValue('SPLASHMBW_ERASE_CATEGORIES'));
+        Configuration::updateValue('SPLASHMBW_TEMP_CATEGORY', Tools::getValue('SPLASHMBW_TEMP_CATEGORY'));
+
+        $this->toggleJAMarketplaceSupport();
+
+        /* Create splash_temp category if it doesn't exists */
+        $lang = Configuration::get('PS_LANG_DEFAULT');
+        $tempCategory = \Category::searchByName($lang, 'Splash temp', true, true);
+
+        if (!$tempCategory) {
+            $category = new \Category();
+            $category->name[$lang] = 'Splash temp';
+            $category->description[$lang] = 'Splash temp category';
+            $category->link_rewrite[$lang] = 'splash_temp';
+
+            $category->id_parent = (int)Configuration::get('PS_HOME_CATEGORY');
+            $category->active = 0;
+            $category->add();
+
+            $tempCategory = (array)$category;
+        }
+
         //====================================================================//
         // Update Oders Status Values
         if (\Splash\Local\Services\OrderStatusManager::isAllowedWrite()) {
@@ -811,6 +969,19 @@ class SplashSync extends Module
         }
 
         return $output;
+    }
+
+    /**
+     * MBW Custom
+     * @throws PrestaShopDatabaseException
+     */
+    private function toggleJAMarketplaceSupport()
+    {
+        if (Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE')) {
+            Db::getInstance()->execute('ALTER TABLE '._DB_PREFIX_.'product ADD `ja_shop_name` VARCHAR(255)');
+        } else {
+            Db::getInstance()->execute('ALTER TABLE '._DB_PREFIX_.'product DROP COLUMN `ja_shop_name`');
+        }
     }
 
     /**
@@ -991,7 +1162,7 @@ class SplashSync extends Module
         //====================================================================//
         // Encode & Compare
         $newRaw = json_encode(Splash\Client\Splash::log());
-        if (0 != strcmp($rawNotifications, (string) $newRaw)) {
+        if (0 != strcmp($rawNotifications, (string)$newRaw)) {
             //====================================================================//
             // Save new Cookie String
             Context::getContext()->cookie->__set("spl_notify", $newRaw);

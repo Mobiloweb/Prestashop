@@ -3,7 +3,7 @@
 /*
  *  This file is part of SplashSync Project.
  *
- *  Copyright (C) 2015-2021 Splash Sync  <www.splashsync.com>
+ *  Copyright (C) 2015-2020 Splash Sync  <www.splashsync.com>
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,8 +20,8 @@ use Configuration;
 use Language;
 use Product;
 use Shop;
-use Splash\Client\Splash        as SplashClient;
-use Splash\Core\SplashCore      as Splash;
+use Splash\Client\Splash as SplashClient;
+use Splash\Core\SplashCore as Splash;
 use Splash\Local\Services\LanguagesManager as SLM;
 use Splash\Local\Services\MultiShopManager as MSM;
 use Tools;
@@ -150,6 +150,7 @@ trait CRUDTrait
             //====================================================================//
             // FORCE MSF FIELDS WRITING
             $updateFields = $this->getMsfUpdateFields("Product");
+
             if (is_array($updateFields)) {
                 $this->object->setFieldsToUpdate($updateFields);
             }
@@ -176,6 +177,7 @@ trait CRUDTrait
      */
     public function delete($unikId = null)
     {
+        Splash::log()->www(__METHOD__, "CALLED");
         //====================================================================//
         // Stack Trace
         Splash::log()->trace();
@@ -229,7 +231,7 @@ trait CRUDTrait
             return false;
         }
 
-        return (string) $this->getUnikId();
+        return (string)$this->getUnikId();
     }
 
     /**
@@ -265,12 +267,12 @@ trait CRUDTrait
             // Extra Languages
             if (empty($this->in["link_rewrite_".$isoCode])) {
                 //====================================================================//
-                // Detect Multi-lang Name or Fallback to Default
+                // Detect Multilang Name or Fallback to Default
                 $value = isset($this->in["name_".$isoCode])
-                        ? $this->in["name_".$isoCode]
-                        : $this->in["name"];
+                    ? $this->in["name_".$isoCode]
+                    : $this->in["name"];
                 //====================================================================//
-                // Setup Multi-lang Url Rewrite
+                // Setup Multilang Url Rewrite
                 $this->in["link_rewrite_".$isoCode] = Tools::link_rewrite($value);
             }
         }
@@ -294,19 +296,88 @@ trait CRUDTrait
         $this->object = new Product();
         //====================================================================//
         // Setup Product Minimal Data
+
+        /* MBW - JAMarketplace suppport: Add seller name to the end of the products */
+        if (Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE')) {
+            $this->in["name"] = $this->in["name"].' - '.$this->in['ja_shop_name'];
+        }
+
         $this->setSimple("reference", $this->in["ref"]);
         $this->setMultilang("name", SLM::getDefaultLangId(), $this->in["name"]);
         $this->setMultilang("link_rewrite", SLM::getDefaultLangId(), $this->in["link_rewrite"]);
         //====================================================================//
         // Pre-Setup Product Status
         if (isset(Splash::configuration()->PsNewProductStatus)) {
-            $this->setSimple("active", (bool) Splash::configuration()->PsNewProductIsActive);
+            $this->setSimple("active", (bool)Splash::configuration()->PsNewProductIsActive);
         }
         //====================================================================//
         // CREATE PRODUCT
         if (true != $this->object->add()) {
             return Splash::log()->errTrace(" Unable to create Simple Product.");
         }
+
+        //====================================================================//
+        // MBW - Manage splash_temp category
+        if (\Configuration::get('SPLASHMBW_TEMP_CATEGORY')) {
+            try {
+                $lang = Configuration::get('PS_LANG_DEFAULT');
+                $tempCategory = \Category::searchByName($lang, 'Splash temp', true, true);
+
+                if (!$tempCategory) {
+                    throw new \Exception('Temp category not found');
+                }
+
+                /* Move the product inside the splash_temp category */
+                $this->object->addToCategories([(int)$tempCategory['id_category']]);
+
+            } catch (\Exception $e) {
+                Splash::log()->err($e->getMessage());
+            }
+        }
+
+        /* MBW - JAMarketplace suppport: Associate the product to the seller */
+        if (Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE')) {
+            $firstTry = new \DbQuery();
+            $firstTry
+                ->select('id_seller')
+                ->from('seller')
+                ->where('name LIKE %'.pSQL($this->in['ja_shop_name']).'%');
+
+            $secondTry = new \DbQuery();
+            $secondTry
+                ->select('id_seller')
+                ->from('seller')
+                ->where('REPLACE(`name`, " ", "") LIKE "%'.pSQL($this->in['ja_shop_name']).'%"');
+
+            $found = false;
+            $multiple = false;
+            foreach ([$firstTry, $secondTry] as $query) {
+
+                $sellers = (array)\Db::getInstance()->executeS($query);
+
+                if (count($sellers) > 0) {
+                    $found = $sellers[0]['id_seller'];
+                }
+
+                if (count($sellers) > 1) {
+                    $multiple = true;
+                }
+            }
+
+            if (!$found) {
+                Splash::log()->err("JAMarketplace - Seller id for ".$this->in['ja_shop_name']." not found");
+            }
+
+            if ($multiple) {
+                Splash::log()->err("JAMarketplace - We've found multiple sellers called: ".$this->in['ja_shop_name']);
+            }
+
+            if ($found && !$multiple) {
+                require_once _PS_MODULE_DIR_.'jmarketplace/classes/SellerProduct.php';
+                \SellerProduct::associateSellerProduct($found, $this->object->id);
+            }
+        }
+
         //====================================================================//
         // Store New Id on SplashObject Class
         $this->ProductId = $this->object->id;

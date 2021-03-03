@@ -3,7 +3,7 @@
 /*
  *  This file is part of SplashSync Project.
  *
- *  Copyright (C) 2015-2021 Splash Sync  <www.splashsync.com>
+ *  Copyright (C) 2015-2020 Splash Sync  <www.splashsync.com>
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,6 +15,8 @@
 
 namespace Splash\Local\Objects\Product;
 
+use Configuration;
+use Splash\Client\Splash;
 use Splash\Local\Services\LanguagesManager;
 use Translate;
 
@@ -50,7 +52,6 @@ trait MetaDataTrait
                 ->Description($groupName." ".Translate::getAdminTranslation("Meta description", "AdminProducts"))
                 ->Group($groupName)
                 ->MicroData("http://schema.org/Article", "headline")
-                ->isReadOnly(self::isSourceCatalogMode())
                 ->setMultilang($isoLang);
 
             //====================================================================//
@@ -61,7 +62,6 @@ trait MetaDataTrait
                 ->Description($groupName." ".Translate::getAdminTranslation("Meta title", "AdminProducts"))
                 ->Group($groupName)
                 ->MicroData("http://schema.org/Article", "name")
-                ->isReadOnly(self::isSourceCatalogMode())
                 ->setMultilang($isoLang);
 
             //====================================================================//
@@ -83,15 +83,22 @@ trait MetaDataTrait
                 ->Description($groupName." ".Translate::getAdminTranslation("Friendly URL", "AdminProducts"))
                 ->Group($groupName)
                 ->MicroData("http://schema.org/Product", "urlRewrite")
-                ->isReadOnly(self::isSourceCatalogMode())
                 ->setMultilang($isoLang);
+
+            //====================================================================//
+            // MBW - JA Seller from
+            $this->fieldsFactory()->create(SPL_T_VARCHAR)
+                ->Identifier("ja_shop_name")
+                ->Name(Translate::getAdminTranslation("Shop name", "AdminShopparametersFeature"))
+                ->Description($groupName." ".Translate::getAdminTranslation("Shop name", "AdminProducts"))
+                ->Group($groupName);
         }
     }
 
     /**
      * Read requested Field
      *
-     * @param string $key       Input List Key
+     * @param string $key Input List Key
      * @param string $fieldName Field Identifier / Name
      *
      * @return void
@@ -121,6 +128,13 @@ trait MetaDataTrait
                     unset($this->in[$key]);
 
                     break;
+
+                // MBW
+                case 'ja_shop_name':
+                    $this->getSimple($fieldName);
+                    unset($this->in[$key]);
+
+                    break;
             }
         }
     }
@@ -129,17 +143,12 @@ trait MetaDataTrait
      * Write Given Fields
      *
      * @param string $fieldName Field Identifier / Name
-     * @param mixed  $fieldData Field Data
+     * @param mixed $fieldData Field Data
      *
      * @return void
      */
     protected function setMetaDataFields($fieldName, $fieldData)
     {
-        //====================================================================//
-        // Source Catalog Mode => Write is Forbidden
-        if (self::isSourceCatalogMode()) {
-            return;
-        }
         //====================================================================//
         // Walk on Available Languages
         foreach (LanguagesManager::getAvailableLanguages() as $idLang => $isoLang) {
@@ -154,6 +163,13 @@ trait MetaDataTrait
                 case 'meta_title':
                     $this->setMultilang($baseFieldName, $idLang, $fieldData);
                     $this->addMsfUpdateFields("Product", $baseFieldName, $idLang);
+                    unset($this->in[$fieldName]);
+
+                    break;
+
+                // MBW
+                case 'ja_shop_name':
+                    $this->setSimple($fieldName, $fieldData);
                     unset($this->in[$fieldName]);
 
                     break;
