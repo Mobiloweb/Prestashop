@@ -236,6 +236,15 @@ class SplashSync extends Module
             return false;
         }
 
+        /* MBW */
+        if (!Configuration::deleteByName('SPLASHMBW_DESC_BEHAVIOR')
+            || !Configuration::deleteByName('SPLASHMBW_ENABLE_JAMARKETPLACE')
+            || !Configuration::deleteByName('SPLASHMBW_ERASE_CATEGORIES')
+            || !Configuration::deleteByName('SPLASHMBW_TEMP_CATEGORY')
+            || !Configuration::deleteByName('SPLASHMBW_DEACTIVATE_PRODUCTS')) {
+            return false;
+        }
+
         return true;
     }
 
@@ -332,6 +341,7 @@ class SplashSync extends Module
         $helper->fields_value['SPLASHMBW_ENABLE_JAMARKETPLACE'] = Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE');
         $helper->fields_value['SPLASHMBW_ERASE_CATEGORIES'] = Configuration::get('SPLASHMBW_ERASE_CATEGORIES');
         $helper->fields_value['SPLASHMBW_TEMP_CATEGORY'] = Configuration::get('SPLASHMBW_TEMP_CATEGORY');
+        $helper->fields_value['SPLASHMBW_DEACTIVATE_PRODUCTS'] = Configuration::get('SPLASHMBW_DEACTIVATE_PRODUCTS');
 
         //====================================================================//
         // Load Oders Status Values
@@ -795,6 +805,25 @@ class SplashSync extends Module
             ],
         ];
 
+        $fields[] = [
+            'type' => 'switch',
+            'label' => $this->l("Deactivate deleted products instead of delete them"),
+            'name' => 'SPLASHMBW_DEACTIVATE_PRODUCTS',
+            'is_bool' => true,
+            'values' => [
+                [
+                    'id' => 'active_on',
+                    'value' => 1,
+                    'label' => $this->l('Yes'),
+                ],
+                [
+                    'id' => 'active_off',
+                    'value' => 0,
+                    'label' => $this->l('No'),
+                ],
+            ],
+        ];
+
         //====================================================================//
         // Init Form array
         $output = array();
@@ -939,6 +968,7 @@ class SplashSync extends Module
         Configuration::updateValue('SPLASHMBW_ENABLE_JAMARKETPLACE', Tools::getValue('SPLASHMBW_ENABLE_JAMARKETPLACE'));
         Configuration::updateValue('SPLASHMBW_ERASE_CATEGORIES', Tools::getValue('SPLASHMBW_ERASE_CATEGORIES'));
         Configuration::updateValue('SPLASHMBW_TEMP_CATEGORY', Tools::getValue('SPLASHMBW_TEMP_CATEGORY'));
+        Configuration::updateValue('SPLASHMBW_DEACTIVATE_PRODUCTS', Tools::getValue('SPLASHMBW_DEACTIVATE_PRODUCTS'));
 
         $this->toggleJAMarketplaceSupport();
 
@@ -956,11 +986,9 @@ class SplashSync extends Module
                 $category->id_parent = (int)Configuration::get('PS_HOME_CATEGORY');
                 $category->active = 0;
                 $category->add();
-
-                $tempCategory = (array)$category;
             }
         }
-        
+
         //====================================================================//
         // Update Oders Status Values
         if (\Splash\Local\Services\OrderStatusManager::isAllowedWrite()) {

@@ -177,7 +177,6 @@ trait CRUDTrait
      */
     public function delete($unikId = null)
     {
-        Splash::log()->www(__METHOD__, "CALLED");
         //====================================================================//
         // Stack Trace
         Splash::log()->trace();
@@ -219,6 +218,12 @@ trait CRUDTrait
 
         //====================================================================//
         // Else Delete Product From DataBase
+        /* MBW - Deactivate products instead of delete them to keep SEO */
+        if (Configuration::get('SPLASHMBW_DEACTIVATE_PRODUCTS')) {
+            $this->object->available_for_order = false;
+            return $this->object->update();
+        }
+
         return $this->object->delete();
     }
 
