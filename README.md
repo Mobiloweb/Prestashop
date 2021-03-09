@@ -13,7 +13,7 @@ It provides access to multiples Objects for automated synchronization though Spl
 
 ## Installation
 
-* Download the Mobiloweb version [here](https://google.com)
+* Download the Mobiloweb version [here](https://github.com/Mobiloweb/Prestashop/releases/tag/1.0)
 * Copy module contents on PrestaShop module's folder (modules/splashsync) 
 * Enable & Configure the module from Administration Module's page.
 * Set the `PS_PRODUCT_SHORT_DESC_LIMIT` column to **2000** in the `ps_configuration` table
