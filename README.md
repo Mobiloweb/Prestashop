@@ -1,6 +1,6 @@
 [![N|Solid](https://github.com/SplashSync/Php-Core/raw/master/img/github.jpg)](https://www.splashsync.com)
 
-<img align="center" width="100" height="100" src="https://user-images.githubusercontent.com/17336553/116259806-6c4e9180-a776-11eb-8157-b74f50baf166.png">
+<img align="center" width="100" height="100" src="https://user-images.githubusercontent.com/17336553/116259806-6c4e9180-a776-11eb-8157-b74f50baf166.png">  - Mobiloweb customized version
 
 # Splash Sync Module for PrestaShop
 Splash Php Module for Prestashop E-Commerce Platforms.
