@@ -35,6 +35,7 @@ If enabled, you'll need to add the following in **classes/Product.php** (both se
 `'ja_shop_name' => ['type' => self::TYPE_STRING, 'validate' => 'isString'],` in the fields at line 324
 
 **And add the following on the sender server (not the marketplace)**
+
 `$this->ja_shop_name = Configuration::get('PS_SHOP_NAME');` at the end of the __construct() method (~line 590)
 
 ### Change the Splashsync mapping
