@@ -1,5 +1,5 @@
 [![N|Solid](https://github.com/SplashSync/Php-Core/raw/master/img/github.jpg)](https://www.splashsync.com)
-[![N|Solid](https://user-images.githubusercontent.com/17336553/116259806-6c4e9180-a776-11eb-8157-b74f50baf166.png =50x)
+<img align="right" width="70" height="70" src="https://user-images.githubusercontent.com/17336553/116259806-6c4e9180-a776-11eb-8157-b74f50baf166.png">
 
 # Splash Sync Module for PrestaShop - MOBILOWEB VERSION
 Splash Php Module for Prestashop E-Commerce Platforms.
