@@ -238,10 +238,10 @@ class SplashSync extends Module
 
         /* MBW */
         if (!Configuration::deleteByName('SPLASHMBW_DESC_BEHAVIOR')
+            || !Configuration::deleteByName('SPLASHMBW_IS_RECIPIENT')
             || !Configuration::deleteByName('SPLASHMBW_ENABLE_JAMARKETPLACE')
             || !Configuration::deleteByName('SPLASHMBW_ERASE_CATEGORIES')
-            || !Configuration::deleteByName('SPLASHMBW_TEMP_CATEGORY')
-            || !Configuration::deleteByName('SPLASHMBW_DEACTIVATE_PRODUCTS')) {
+            || !Configuration::deleteByName('SPLASHMBW_TEMP_CATEGORY')) {
             return false;
         }
 
@@ -338,10 +338,10 @@ class SplashSync extends Module
 
         /* MBW Custom values */
         $helper->fields_value['SPLASHMBW_DESC_BEHAVIOR'] = Configuration::get('SPLASHMBW_DESC_BEHAVIOR');
+        $helper->fields_value['SPLASHMBW_IS_RECIPIENT'] = Configuration::get('SPLASHMBW_IS_RECIPIENT');
         $helper->fields_value['SPLASHMBW_ENABLE_JAMARKETPLACE'] = Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE');
         $helper->fields_value['SPLASHMBW_ERASE_CATEGORIES'] = Configuration::get('SPLASHMBW_ERASE_CATEGORIES');
         $helper->fields_value['SPLASHMBW_TEMP_CATEGORY'] = Configuration::get('SPLASHMBW_TEMP_CATEGORY');
-        $helper->fields_value['SPLASHMBW_DEACTIVATE_PRODUCTS'] = Configuration::get('SPLASHMBW_DEACTIVATE_PRODUCTS');
 
         //====================================================================//
         // Load Oders Status Values
@@ -718,12 +718,34 @@ class SplashSync extends Module
         // Init Fields List
         $fields = array();
 
+        $fields[] = [
+            'type' => 'switch',
+            'label' => $this->l("Is recipient"),
+            'name' => 'SPLASHMBW_IS_RECIPIENT',
+            'hint' => $this->l(
+                'Is this the receiving server?'
+            ),
+            'is_bool' => true,
+            'values' => [
+                [
+                    'id' => 'active_on',
+                    'value' => 1,
+                    'label' => $this->l('Yes'),
+                ],
+                [
+                    'id' => 'active_off',
+                    'value' => 0,
+                    'label' => $this->l('No'),
+                ],
+            ],
+        ];
+
         //====================================================================//
         // Change default description behavior
         $fields[] = [
             'type' => 'switch',
             'label' => $this->l("Override default description behavior"),
-            'hint' => $this->l('Update the description and the short description fields only if they are empty'),
+            'hint' => $this->l('Update the description and the short description fields only if they are empty (Recipient)'),
             'name' => 'SPLASHMBW_DESC_BEHAVIOR',
             'is_bool' => true,
             'values' => [
@@ -765,7 +787,7 @@ class SplashSync extends Module
 
         $fields[] = [
             'type' => 'switch',
-            'label' => $this->l("Delete the categories if they don't exists on both servers?"),
+            'label' => $this->l("Delete the categories if they don't exists on both servers? (Recipient)"),
             'hint' => $this->l(
                 "Choose if you want the categories to be deleted from this server's products if they don't match with the
                 remote one"
@@ -788,27 +810,8 @@ class SplashSync extends Module
 
         $fields[] = [
             'type' => 'switch',
-            'label' => $this->l("Move new products to the 'metro_temp' category"),
+            'label' => $this->l("Move new products to the 'metro_temp' category (Recipient)"),
             'name' => 'SPLASHMBW_TEMP_CATEGORY',
-            'is_bool' => true,
-            'values' => [
-                [
-                    'id' => 'active_on',
-                    'value' => 1,
-                    'label' => $this->l('Yes'),
-                ],
-                [
-                    'id' => 'active_off',
-                    'value' => 0,
-                    'label' => $this->l('No'),
-                ],
-            ],
-        ];
-
-        $fields[] = [
-            'type' => 'switch',
-            'label' => $this->l("Deactivate deleted products instead of delete them"),
-            'name' => 'SPLASHMBW_DEACTIVATE_PRODUCTS',
             'is_bool' => true,
             'values' => [
                 [
@@ -964,11 +967,11 @@ class SplashSync extends Module
         Configuration::updateValue('SPLASH_SYNC_PACKS', trim(Tools::getValue('SPLASH_SYNC_PACKS')));
 
         /* MBW Custom values */
+        Configuration::updateValue('SPLASHMBW_IS_RECIPIENT', Tools::getValue('SPLASHMBW_IS_RECIPIENT'));
         Configuration::updateValue('SPLASHMBW_DESC_BEHAVIOR', Tools::getValue('SPLASHMBW_DESC_BEHAVIOR'));
         Configuration::updateValue('SPLASHMBW_ENABLE_JAMARKETPLACE', Tools::getValue('SPLASHMBW_ENABLE_JAMARKETPLACE'));
         Configuration::updateValue('SPLASHMBW_ERASE_CATEGORIES', Tools::getValue('SPLASHMBW_ERASE_CATEGORIES'));
         Configuration::updateValue('SPLASHMBW_TEMP_CATEGORY', Tools::getValue('SPLASHMBW_TEMP_CATEGORY'));
-        Configuration::updateValue('SPLASHMBW_DEACTIVATE_PRODUCTS', Tools::getValue('SPLASHMBW_DEACTIVATE_PRODUCTS'));
 
         $this->toggleJAMarketplaceSupport();
 
@@ -1002,7 +1005,7 @@ class SplashSync extends Module
     }
 
     /**
-     * MBW Custom
+     * MBW Custom - Toggle jamarketplace support (on/off)
      * @throws PrestaShopDatabaseException
      */
     private function toggleJAMarketplaceSupport()

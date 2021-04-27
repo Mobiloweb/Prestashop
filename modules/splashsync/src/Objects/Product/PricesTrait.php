@@ -346,7 +346,7 @@ trait PricesTrait
                 $this->needUpdate();
             } else {
                 Splash::log()->war(
-                    "VAT Rate Update : Unable to find this tax rate localy (".$newPrice["vat"].")"
+//                    "VAT Rate Update : Unable to find this tax rate localy (".$newPrice["vat"].")"
                 );
             }
         }

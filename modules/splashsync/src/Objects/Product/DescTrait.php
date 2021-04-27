@@ -118,7 +118,6 @@ trait DescTrait
                 case 'fullname':
                     //====================================================================//
                     // Product Specific - Read Full Product Name with Attribute Description
-                    Splash::log()->www(__METHOD__, "FULLNAME");
                     $this->out[$fieldName] = Product::getProductName($this->object->id, $this->AttributeId, $idLang);
                     unset($this->in[$key]);
 
@@ -150,10 +149,11 @@ trait DescTrait
                     $this->setMultilang($baseFieldName, $idLang, $fieldData);
                     $this->addMsfUpdateFields("Product", $baseFieldName, $idLang);
 
-                    /* MBW - Add seller name on update */
+                    /* MBW - Concatenate the name to add the seller name
+                    This is working with the new ja_shop_name created in MetaDataTrait */
                     if (Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE')) {
                         foreach ($this->object->{$baseFieldName} as &$name) {
-                            $name .= ' - '.$this->in['ja_shop_name'];
+                            $name .= ' - ' . $this->in['ja_shop_name'];
                         }
                     }
 
@@ -162,33 +162,32 @@ trait DescTrait
                     break;
                 case 'description':
                 case 'description_short':
-                    //====================================================================//
-                    // MBW - Set description and description_short only if they are empty
+
+                    /* MBW - If the DESC_BEHAVIOR option is enabled then update the desc and the short_desc
+                    only if they are empty on the server (marketplace) */
+
+                    $maxLength = (int)Configuration::get('PS_PRODUCT_SHORT_DESC_LIMIT');
+
                     if (Configuration::get('SPLASHMBW_DESC_BEHAVIOR')) {
-                        try {
-                            $psProduct = new Product((int)$this->ProductId);
-                            if (strlen($psProduct->description_short[$idLang]) < 1) {
-                                $maxLength = (int)Configuration::get('PS_PRODUCT_SHORT_DESC_LIMIT');
-                                $this->setMultilang(
-                                    $baseFieldName,
-                                    $idLang,
-                                    $fieldData,
-                                    $maxLength ? $maxLength : null
-                                );
-                                $this->addMsfUpdateFields("Product", $baseFieldName, $idLang);
-                            }
-                        } catch (\Exception $e) {
-                            Splash::log()->err('Cannot load product n°'.$this->ProductId);
+                        $incoming = $fieldData;
+                        $current = $this->object->$baseFieldName[$idLang];
+
+                        $output = '';
+
+                        /* If the DESC_BEHAVIOR is enabled then synchronize the desc and the short_desc only if they
+                        are empty on the server and if they are not empty on the sender server */
+                        if (empty($current) && !empty($incoming)) {
+                            $output = $incoming;
+                            $this->setMultilang($baseFieldName, $idLang, $output, $maxLength ?: 0);
                         }
+
                     } else {
-                        $maxLength = (int)Configuration::get('PS_PRODUCT_SHORT_DESC_LIMIT');
-                        $this->setMultilang($baseFieldName, $idLang, $fieldData, $maxLength ? $maxLength : null);
-                        $this->addMsfUpdateFields("Product", $baseFieldName, $idLang);
+                        $this->setMultilang($baseFieldName, $idLang, $fieldData, $maxLength ?: 0);
                     }
 
-                    //====================================================================//
-                    unset($this->in[$fieldName]);
+                    $this->addMsfUpdateFields("Product", $baseFieldName, $idLang);
 
+                    unset($this->in[$fieldName]);
                     break;
                 default:
                     break;

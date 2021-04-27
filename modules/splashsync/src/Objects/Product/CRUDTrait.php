@@ -24,6 +24,7 @@ use Splash\Client\Splash as SplashClient;
 use Splash\Core\SplashCore as Splash;
 use Splash\Local\Services\LanguagesManager as SLM;
 use Splash\Local\Services\MultiShopManager as MSM;
+use Tinify\Exception;
 use Tools;
 
 /**
@@ -143,6 +144,33 @@ trait CRUDTrait
             return $this->getObjectIdentifier();
         }
 
+        // MBW - ONLINE_ONLY ENABLED = DO NOT UPDATE THE PRODUCT - THIS IS OVERRIDING DEFAULT SPLASH BEHAVIOR
+
+        /* NOTE: Need to be enabled ONLY on the receiver server.
+
+        If the online_only option is enabled, don't update the product on the marketplace and override
+        its following values on every update request:
+        - reference: unsync
+        - quantity: 0
+        - available_for_order: false
+
+        Otherwise, if the online_only option is disabled, synchronize the product
+        between the sender server and the marketplace */
+        if ((bool)$this->object->online_only && Configuration::get('SPLASHMBW_IS_RECIPIENT')) {
+
+            $psProd = new Product($this->object->id);
+            $psProd->reference = 'unsync';
+            $psProd->online_only = true;
+            $psProd->available_for_order = false;
+
+            // Fix quantity keep updating by set it to 0 everytime
+            \StockAvailable::setQuantity($psProd->id, $this->AttributeId, 0);
+
+            $psProd->update();
+
+            return $this->getObjectIdentifier();
+        }
+
         //====================================================================//
         // UPDATE MAIN INFORMATIONS
         //====================================================================//
@@ -218,11 +246,6 @@ trait CRUDTrait
 
         //====================================================================//
         // Else Delete Product From DataBase
-        /* MBW - Deactivate products instead of delete them to keep SEO */
-        if (Configuration::get('SPLASHMBW_DEACTIVATE_PRODUCTS')) {
-            $this->object->available_for_order = false;
-            return $this->object->update();
-        }
 
         return $this->object->delete();
     }
@@ -302,11 +325,6 @@ trait CRUDTrait
         //====================================================================//
         // Setup Product Minimal Data
 
-        /* MBW - JAMarketplace suppport: Add seller name to the end of the products */
-        if (Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE')) {
-            $this->in["name"] = $this->in["name"].' - '.$this->in['ja_shop_name'];
-        }
-
         $this->setSimple("reference", $this->in["ref"]);
         $this->setMultilang("name", SLM::getDefaultLangId(), $this->in["name"]);
         $this->setMultilang("link_rewrite", SLM::getDefaultLangId(), $this->in["link_rewrite"]);
@@ -322,7 +340,8 @@ trait CRUDTrait
         }
 
         //====================================================================//
-        // MBW - Manage splash_temp category
+        // MBW - Manage temp category
+        /* Automatically move the newly created product to the splash_temp category on the marketplace */
         if (\Configuration::get('SPLASHMBW_TEMP_CATEGORY')) {
             try {
                 $lang = Configuration::get('PS_LANG_DEFAULT');
@@ -340,19 +359,19 @@ trait CRUDTrait
             }
         }
 
-        /* MBW - JAMarketplace suppport: Associate the product to the seller */
-        if (Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE')) {
+        /* MBW - JAMarketplace suppport: Associate the product to the seller, only on the recipient server */
+        if (Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE') && Configuration::get('SPLASHMBW_IS_RECIPIENT')) {
             $firstTry = new \DbQuery();
             $firstTry
                 ->select('id_seller')
                 ->from('seller')
-                ->where('name LIKE %'.pSQL($this->in['ja_shop_name']).'%');
+                ->where('name LIKE %' . pSQL($this->in['ja_shop_name']) . '%');
 
             $secondTry = new \DbQuery();
             $secondTry
                 ->select('id_seller')
                 ->from('seller')
-                ->where('REPLACE(`name`, " ", "") LIKE "%'.pSQL($this->in['ja_shop_name']).'%"');
+                ->where('REPLACE(`name`, " ", "") LIKE "%' . pSQL($this->in['ja_shop_name']) . '%"');
 
             $found = false;
             $multiple = false;
@@ -370,15 +389,15 @@ trait CRUDTrait
             }
 
             if (!$found) {
-                Splash::log()->err("JAMarketplace - Seller id for ".$this->in['ja_shop_name']." not found");
+                Splash::log()->err("JAMarketplace - Seller id for " . $this->in['ja_shop_name'] . " not found");
             }
 
             if ($multiple) {
-                Splash::log()->err("JAMarketplace - We've found multiple sellers called: ".$this->in['ja_shop_name']);
+                Splash::log()->err("JAMarketplace - We've found multiple sellers called: " . $this->in['ja_shop_name']);
             }
 
             if ($found && !$multiple) {
-                require_once _PS_MODULE_DIR_.'jmarketplace/classes/SellerProduct.php';
+                require_once _PS_MODULE_DIR_ . 'jmarketplace/classes/SellerProduct.php';
                 \SellerProduct::associateSellerProduct($found, $this->object->id);
             }
         }

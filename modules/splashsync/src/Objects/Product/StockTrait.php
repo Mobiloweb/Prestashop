@@ -92,7 +92,6 @@ trait StockTrait
             // Stock Reel
             case 'stock':
                 $this->out[$fieldName] = $this->getStockQuantity();
-
                 break;
             //====================================================================//
             // Out Of Stock
@@ -138,6 +137,7 @@ trait StockTrait
             //====================================================================//
             // Direct Writings
             case 'stock':
+
                 //====================================================================//
                 // Product Already Exists => Update Product Stock
                 if (($this->getStockQuantity() != $fieldData) && $this->isAllowedStockUpdate()) {

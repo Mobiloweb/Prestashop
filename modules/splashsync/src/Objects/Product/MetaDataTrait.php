@@ -49,7 +49,7 @@ trait MetaDataTrait
             $this->fieldsFactory()->create(SPL_T_VARCHAR)
                 ->Identifier("meta_description")
                 ->Name(Translate::getAdminTranslation("Meta description", "AdminProducts"))
-                ->Description($groupName." ".Translate::getAdminTranslation("Meta description", "AdminProducts"))
+                ->Description($groupName . " " . Translate::getAdminTranslation("Meta description", "AdminProducts"))
                 ->Group($groupName)
                 ->MicroData("http://schema.org/Article", "headline")
                 ->setMultilang($isoLang);
@@ -59,7 +59,7 @@ trait MetaDataTrait
             $this->fieldsFactory()->create(SPL_T_VARCHAR)
                 ->Identifier("meta_title")
                 ->Name(Translate::getAdminTranslation("Meta title", "AdminProducts"))
-                ->Description($groupName." ".Translate::getAdminTranslation("Meta title", "AdminProducts"))
+                ->Description($groupName . " " . Translate::getAdminTranslation("Meta title", "AdminProducts"))
                 ->Group($groupName)
                 ->MicroData("http://schema.org/Article", "name")
                 ->setMultilang($isoLang);
@@ -69,7 +69,7 @@ trait MetaDataTrait
             $this->fieldsFactory()->create(SPL_T_VARCHAR)
                 ->Identifier("meta_keywords")
                 ->Name(Translate::getAdminTranslation("Meta keywords", "AdminProducts"))
-                ->Description($groupName." ".Translate::getAdminTranslation("Meta keywords", "AdminProducts"))
+                ->Description($groupName . " " . Translate::getAdminTranslation("Meta keywords", "AdminProducts"))
                 ->Group($groupName)
                 ->MicroData("http://schema.org/Article", "keywords")
                 ->setMultilang($isoLang)
@@ -80,19 +80,19 @@ trait MetaDataTrait
             $this->fieldsFactory()->create(SPL_T_VARCHAR)
                 ->Identifier("link_rewrite")
                 ->Name(Translate::getAdminTranslation("Friendly URL", "AdminProducts"))
-                ->Description($groupName." ".Translate::getAdminTranslation("Friendly URL", "AdminProducts"))
+                ->Description($groupName . " " . Translate::getAdminTranslation("Friendly URL", "AdminProducts"))
                 ->Group($groupName)
                 ->MicroData("http://schema.org/Product", "urlRewrite")
                 ->setMultilang($isoLang);
-
-            //====================================================================//
-            // MBW - JA Seller from
-            $this->fieldsFactory()->create(SPL_T_VARCHAR)
-                ->Identifier("ja_shop_name")
-                ->Name(Translate::getAdminTranslation("Shop name", "AdminShopparametersFeature"))
-                ->Description($groupName." ".Translate::getAdminTranslation("Shop name", "AdminProducts"))
-                ->Group($groupName);
         }
+
+        //====================================================================//
+        // MBW - Create ja_shop_name
+        $this->fieldsFactory()->create(SPL_T_VARCHAR)
+            ->Identifier("ja_shop_name")
+            ->Name(Translate::getAdminTranslation("Shop name", "AdminShopparametersFeature"))
+            ->Description($groupName . " " . Translate::getAdminTranslation("Shop name", "AdminProducts"))
+            ->Group($groupName);
     }
 
     /**
@@ -129,13 +129,13 @@ trait MetaDataTrait
 
                     break;
 
-                // MBW
-                case 'ja_shop_name':
-                    $this->getSimple($fieldName);
-                    unset($this->in[$key]);
-
-                    break;
             }
+        }
+
+        if ($fieldName == 'ja_shop_name') {
+            // MBW - Get ja_shop_name
+            $this->getSimple($fieldName);
+            unset($this->in[$key]);
         }
     }
 
@@ -159,23 +159,102 @@ trait MetaDataTrait
             // WRITE Field
             switch ($baseFieldName) {
                 case 'link_rewrite':
-                case 'meta_description':
-                case 'meta_title':
                     $this->setMultilang($baseFieldName, $idLang, $fieldData);
                     $this->addMsfUpdateFields("Product", $baseFieldName, $idLang);
                     unset($this->in[$fieldName]);
 
                     break;
 
-                // MBW
-                case 'ja_shop_name':
-                    $this->setSimple($fieldName, $fieldData);
-                    unset($this->in[$fieldName]);
+                case 'meta_description':
 
+                    if (Configuration::get('SPLASHMBW_DESC_BEHAVIOR')) {
+
+                        $incoming = $fieldData;
+                        $current = $this->object->$baseFieldName[$idLang];
+
+                        $output = '';
+
+                        /* If the DESC_BEHAVIOR is enabled then synchronize the meta_description only if it's empty on
+                        the marketplace and if it's not empty on the sender server */
+                        if (empty($current) && !empty($incoming)) {
+                            $output = $incoming;
+                            $this->setMultilang($baseFieldName, $idLang, $output);
+                        }
+
+                    } else {
+                        $this->setMultilang($baseFieldName, $idLang, $fieldData);
+                    }
+
+                    $this->addMsfUpdateFields("Product", $baseFieldName, $idLang);
+
+                    unset($this->in[$fieldName]);
+                    break;
+
+                case 'meta_title':
+
+                    if (Configuration::get('SPLASHMBW_DESC_BEHAVIOR')) {
+
+                        $incoming = $fieldData;
+                        $current = $this->object->$baseFieldName[$idLang];
+
+                        /* If DESC_BEHAVIOR isn't enabled, keep the default behavior (synchronize the meta_description) */
+                        $output = '';
+
+                        if (empty($current)) {
+
+                            /* If the DESC_BEHAVIOR is enabled then synchronize the meta_title only if it's empty on
+                            the marketplace and if it's not empty on the sender server */
+                            if (!empty($incoming)) {
+                                $output = $incoming;
+                            }
+
+                            /* Auto generate the meta_title and truncate it if the meta_title from the marketplace and
+                            the sender server are both empty, and if the DESC_BEHAVIOR is enabled */
+                            if (empty($incoming)) {
+
+                                $maxLength = 60;
+                                $toAdd = 'vendu par';
+
+                                $arrTitle = explode('-', $this->object->name[$idLang]);
+
+                                $shopName = array_values(array_slice($arrTitle, -1))[0];
+
+                                array_pop($arrTitle);
+
+                                $newObjectName = implode(' - ', $arrTitle);
+
+                                $totalLength = (strlen($newObjectName) + strlen($toAdd) + strlen($shopName));
+
+                                if ($totalLength > $maxLength) {
+                                    $excess = $totalLength - $maxLength;
+                                    $newObjectName = substr($newObjectName, 0, (strlen($newObjectName) - $excess) - 3) . '.. ';
+                                }
+
+                                $output = trim($newObjectName) . ' ' . trim($toAdd) . ' ' . trim($shopName);
+                            }
+
+                            $this->setMultilang($baseFieldName, $idLang, $output);
+                        }
+
+                        $this->addMsfUpdateFields("Product", $baseFieldName, $idLang);
+
+                    } else {
+
+                        $this->setMultilang($baseFieldName, $idLang, $fieldData);
+                        $this->addMsfUpdateFields("Product", $baseFieldName, $idLang);
+                    }
+
+                    unset($this->in[$fieldName]);
                     break;
                 default:
                     break;
             }
+        }
+
+        // MBW - Set ja_shop_name
+        if ($fieldName == 'ja_shop_name') {
+            $this->setSimple($fieldName, $fieldData);
+            unset($this->in[$fieldName]);
         }
     }
 }
