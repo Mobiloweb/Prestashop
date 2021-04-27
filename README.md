@@ -48,9 +48,6 @@ Just add it to the configuration:
 
 ## Custom configuration by Mobiloweb
 
-### Configuration available
-![Configuration](https://i.imgur.com/DIfWfVs.png)
-
 ### Recommended configuration for the sender (JMarketplace support enabled)
 ![image](https://user-images.githubusercontent.com/17336553/116258156-fc8bd700-a774-11eb-82eb-ff55d025fdec.png)
 
