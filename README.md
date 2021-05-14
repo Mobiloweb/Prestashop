@@ -52,7 +52,7 @@ Just add it to the configuration:
 ![image](https://user-images.githubusercontent.com/17336553/116258156-fc8bd700-a774-11eb-82eb-ff55d025fdec.png)
 
 ### Recommended configuration for the receiver (JMarketplace support enabled)
-![image](https://user-images.githubusercontent.com/17336553/116259088-ca2ea980-a775-11eb-9578-aa3e2de45399.png)
+![image](https://user-images.githubusercontent.com/17336553/118259249-38cb7100-b4b1-11eb-864c-e4a23bdbe51e.png)
 
 
 ## Requirements
