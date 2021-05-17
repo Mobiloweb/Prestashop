@@ -39,10 +39,8 @@ If enabled, you'll need to add the following in **classes/Product.php** (both se
 `$this->ja_shop_name = Configuration::get('PS_SHOP_NAME');` at the end of the __construct() method (~line 590)
 
 ### Change the Splashsync mapping
-Now, you can refresh the servers and you should see a new "Shop name" field appearing in the mapping. 
 
-Just add it to the configuration:
-![image](https://user-images.githubusercontent.com/17336553/116259479-1ed22480-a776-11eb-80ef-a12436995c41.png)
+**TODO** with the new config file from Splash.
 
 **And don't forget to activate it.**
 
