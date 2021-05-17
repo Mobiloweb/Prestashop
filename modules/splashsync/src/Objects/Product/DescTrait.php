@@ -153,7 +153,18 @@ trait DescTrait
                     This is working with the new ja_shop_name created in MetaDataTrait */
                     if (Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE')) {
                         foreach ($this->object->{$baseFieldName} as &$name) {
-                            $name .= ' - ' . $this->in['ja_shop_name'];
+
+                            if (!empty($this->in['ja_shop_name'])) {
+                                $name .= ' - ' . $this->in['ja_shop_name'];
+                            }
+
+                            elseif (empty($this->in['ja_shop_name']) && !empty($this->object->ja_shop_name)) {
+                                $name .= ' - ' . $this->object->ja_shop_name;
+                            }
+
+                            else {
+                                $name .= ' - ERR';
+                            }
                         }
                     }
 

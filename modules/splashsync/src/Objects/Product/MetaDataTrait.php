@@ -92,7 +92,6 @@ trait MetaDataTrait
             ->Identifier("ja_shop_name")
             ->Name(Translate::getAdminTranslation("Shop name", "AdminShopparametersFeature"))
             ->Description($groupName . " " . Translate::getAdminTranslation("Shop name", "AdminProducts"))
-            ->MicroData("http://schema.org/Product", "vendorName")
             ->Group($groupName);
     }
 
@@ -254,7 +253,12 @@ trait MetaDataTrait
 
         // MBW - Set ja_shop_name
         if ($fieldName == 'ja_shop_name') {
-            $this->setSimple($fieldName, $fieldData);
+            if (empty($this->object->ja_shop_name)) {
+                $this->setSimple($fieldName, $fieldData);
+            } else {
+                $this->setSimple($fieldName, $this->object->ja_shop_name);
+            }
+
             unset($this->in[$fieldName]);
         }
     }
