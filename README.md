@@ -22,7 +22,7 @@ It provides access to multiples Objects for automated synchronization though Spl
 
 ```sql
 UPDATE `ps_configuration`
-SET value = "2000"
+SET value = "3000"
 WHERE name = "PS_PRODUCT_SHORT_DESC_LIMIT";
 ```
 
@@ -39,20 +39,16 @@ If enabled, you'll need to add the following in **classes/Product.php** (both se
 `$this->ja_shop_name = Configuration::get('PS_SHOP_NAME');` at the end of the __construct() method (~line 590)
 
 ### Change the Splashsync mapping
-Now, you can refresh the servers and you should see a new "Shop name" field appearing in the mapping. 
 
-Just add it to the configuration:
-![image](https://user-images.githubusercontent.com/17336553/116259479-1ed22480-a776-11eb-80ef-a12436995c41.png)
-
-**And don't forget to activate it.**
+Move the **prestashop.splash.json** file to the Prestashop **config/** folder and rename it to **splash.json**
 
 ## Custom configuration by Mobiloweb
 
 ### Recommended configuration for the sender (JMarketplace support enabled)
-![image](https://user-images.githubusercontent.com/17336553/116258156-fc8bd700-a774-11eb-82eb-ff55d025fdec.png)
+![image](https://user-images.githubusercontent.com/17336553/118800483-41042180-b8a0-11eb-8c89-f85d56370c89.png)
 
 ### Recommended configuration for the receiver (JMarketplace support enabled)
-![image](https://user-images.githubusercontent.com/17336553/118259249-38cb7100-b4b1-11eb-864c-e4a23bdbe51e.png)
+![image](https://user-images.githubusercontent.com/17336553/118800387-2336bc80-b8a0-11eb-9b20-a2c349aa0232.png)
 
 
 ## Requirements
