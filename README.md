@@ -40,17 +40,15 @@ If enabled, you'll need to add the following in **classes/Product.php** (both se
 
 ### Change the Splashsync mapping
 
-**TODO** with the new config file from Splash.
-
-**And don't forget to activate it.**
+Move the **prestashop.splash.json** file to the Prestashop **config/** folder and rename it to **splash.json**
 
 ## Custom configuration by Mobiloweb
 
 ### Recommended configuration for the sender (JMarketplace support enabled)
-![image](https://user-images.githubusercontent.com/17336553/116258156-fc8bd700-a774-11eb-82eb-ff55d025fdec.png)
+![image](https://user-images.githubusercontent.com/17336553/118800483-41042180-b8a0-11eb-8c89-f85d56370c89.png)
 
 ### Recommended configuration for the receiver (JMarketplace support enabled)
-![image](https://user-images.githubusercontent.com/17336553/118259249-38cb7100-b4b1-11eb-864c-e4a23bdbe51e.png)
+![image](https://user-images.githubusercontent.com/17336553/118800387-2336bc80-b8a0-11eb-9b20-a2c349aa0232.png)
 
 
 ## Requirements
