@@ -22,7 +22,7 @@ It provides access to multiples Objects for automated synchronization though Spl
 
 ```sql
 UPDATE `ps_configuration`
-SET value = "2000"
+SET value = "3000"
 WHERE name = "PS_PRODUCT_SHORT_DESC_LIMIT";
 ```
 
