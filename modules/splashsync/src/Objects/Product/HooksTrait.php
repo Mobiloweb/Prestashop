@@ -29,6 +29,7 @@ use Splash\Local\Services\PmAdvancedPack;
  */
 trait HooksTrait
 {
+
     /**
      * This hook is called after a Product is Created
      *
@@ -38,7 +39,33 @@ trait HooksTrait
      */
     public function hookactionObjectProductAddAfter($params)
     {
-        return $this->hookactionProduct($params["object"], SPL_A_CREATE, $this->l('Product Created on Prestashop'));
+        /** @var \Product $object */
+        $object = $params['object'];
+
+        if (\Validate::isLoadedObject($object)) {
+            if (empty($object->reference)) {
+                $object->reference = "MCI$object->id";
+                $object->update();
+            }
+        }
+
+        return $this->hookactionProduct($object, SPL_A_CREATE, $this->l('Product Created on Prestashop'));
+    }
+
+    /** MBW custom
+     * @param array $params
+     */
+    public function hookActionObjectProductAddBefore(array $params): void
+    {
+        $object = $params['object'];
+
+        if (Configuration::get('SPLASHMBW_DEFAULT_ONLINEONLY')) {
+
+            // Set online_only to 1 by default when creating product
+            if (is_object($object) && get_class($object) === \Product::class) {
+                $object->online_only = true;
+            }
+        }
     }
 
     /**
@@ -235,15 +262,15 @@ trait HooksTrait
             $productIds[] = Product::getUnikIdStatic($product->id, $attr["id_product_attribute"]);
         }
 
-        return  $productIds;
+        return $productIds;
     }
 
     /**
      * This function is called after each action on a product object
      *
      * @param PsProduct $product Prestashop Product Object
-     * @param string    $action  Performed Action
-     * @param string    $comment Action Comment
+     * @param string $action Performed Action
+     * @param string $comment Action Comment
      *
      * @return bool
      */
@@ -256,7 +283,7 @@ trait HooksTrait
         }
         //====================================================================//
         // Log
-        $this->debugHook(__FUNCTION__, $product->id." >> ".$comment);
+        $this->debugHook(__FUNCTION__, $product->id . " >> " . $comment);
         //====================================================================//
         // Combination Lock Mode => Splash is Creating a Variant Product
         if (Splash::object("Product")->isLocked("onCombinationLock")) {
@@ -277,8 +304,8 @@ trait HooksTrait
      * This function is called after each action on a Combination object
      *
      * @param Combination $combination Prestashop Combination Object
-     * @param string      $action      Performed Action
-     * @param string      $comment     Action Comment
+     * @param string $action Performed Action
+     * @param string $comment Action Comment
      *
      * @return bool
      */
@@ -294,7 +321,7 @@ trait HooksTrait
         }
         //====================================================================//
         // Log
-        $this->debugHook(__FUNCTION__, $combinationId." >> ".$comment);
+        $this->debugHook(__FUNCTION__, $combinationId . " >> " . $comment);
         //====================================================================//
         // Safety Check
         if (empty($combinationId)) {
@@ -318,7 +345,7 @@ trait HooksTrait
         if (SPL_A_CREATE == $action) {
             //====================================================================//
             // Commit Update For Product Attribute
-            $this->doCommit("Product", (string) $combination->id_product, SPL_A_DELETE, $comment);
+            $this->doCommit("Product", (string)$combination->id_product, SPL_A_DELETE, $comment);
         }
 
         return true;

@@ -99,7 +99,7 @@ class SplashSync extends Module
         if (!class_exists("Splash")) {
             //====================================================================//
             // Splash Module & Dependecies Autoloader
-            require_once(dirname(__FILE__)."/vendor/autoload.php");
+            require_once(dirname(__FILE__) . "/vendor/autoload.php");
             //====================================================================//
             // Init Splash Module
             Splash\Client\Splash::core();
@@ -169,6 +169,10 @@ class SplashSync extends Module
         if (!$this->registerHook('actionProductSave') ||
             !$this->registerHook('actionProductAdd') ||
             !$this->registerHook('actionObjectProductAddAfter') ||
+
+            // MBW
+            !$this->registerHook('actionObjectProductAddBefore') ||
+
             !$this->registerHook('actionObjectProductUpdateAfter') ||
             !$this->registerHook('actionUpdateQuantity') ||
             !$this->registerHook('actionProductUpdate') ||
@@ -239,6 +243,7 @@ class SplashSync extends Module
         /* MBW */
         if (!Configuration::deleteByName('SPLASHMBW_DESC_BEHAVIOR')
             || !Configuration::deleteByName('SPLASHMBW_IS_RECIPIENT')
+            || !Configuration::deleteByName('SPLASHMBW_DEFAULT_ONLINEONLY')
             || !Configuration::deleteByName('SPLASHMBW_ENABLE_JAMARKETPLACE')
             || !Configuration::deleteByName('SPLASHMBW_ERASE_CATEGORIES')
             || !Configuration::deleteByName('SPLASHMBW_TEMP_CATEGORY')) {
@@ -310,7 +315,7 @@ class SplashSync extends Module
         $helper->module = $this;
         $helper->name_controller = $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
-        $helper->currentIndex = AdminController::$currentIndex.'&configure='.$this->name;
+        $helper->currentIndex = AdminController::$currentIndex . '&configure=' . $this->name;
 
         //====================================================================//
         // Language
@@ -322,7 +327,7 @@ class SplashSync extends Module
         $helper->title = $this->displayName;
         $helper->show_toolbar = true;        // false -> remove toolbar
         $helper->toolbar_scroll = true;      // yes - > Toolbar is always visible on the top of the screen.
-        $helper->submit_action = 'submit'.$this->name;
+        $helper->submit_action = 'submit' . $this->name;
 
         //====================================================================//
         // Load current value
@@ -342,6 +347,7 @@ class SplashSync extends Module
         $helper->fields_value['SPLASHMBW_ENABLE_JAMARKETPLACE'] = Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE');
         $helper->fields_value['SPLASHMBW_ERASE_CATEGORIES'] = Configuration::get('SPLASHMBW_ERASE_CATEGORIES');
         $helper->fields_value['SPLASHMBW_TEMP_CATEGORY'] = Configuration::get('SPLASHMBW_TEMP_CATEGORY');
+        $helper->fields_value['SPLASHMBW_DEFAULT_ONLINEONLY'] = Configuration::get('SPLASHMBW_DEFAULT_ONLINEONLY');
 
         //====================================================================//
         // Load Oders Status Values
@@ -377,13 +383,13 @@ class SplashSync extends Module
         }
         //====================================================================//
         // Register Not Js & Css
-        $this->context->controller->addCss($this->_path.'views/css/noty.css');
-        $this->context->controller->addCss($this->_path.'views/css/themes/mint.css');
-        $this->context->controller->addCss($this->_path.'views/css/themes/semanticui.css');
-        $this->context->controller->addJS($this->_path.'views/js/noty.min.js');
+        $this->context->controller->addCss($this->_path . 'views/css/noty.css');
+        $this->context->controller->addCss($this->_path . 'views/css/themes/mint.css');
+        $this->context->controller->addCss($this->_path . 'views/css/themes/semanticui.css');
+        $this->context->controller->addJS($this->_path . 'views/js/noty.min.js');
         //====================================================================//
         // Register Splash Js
-        $this->context->controller->addJS($this->_path.'views/js/splash.js');
+        $this->context->controller->addJS($this->_path . 'views/js/splash.js');
     }
 
     /**
@@ -451,20 +457,20 @@ class SplashSync extends Module
         // Safety Checks
         if (is_scalar($objectId)) {
             Splash\Client\Splash::log()
-                ->deb("Splash Commit => ".$objectType." Action = ".$action." Id = ".$objectId, " : ".$comment);
+                ->deb("Splash Commit => " . $objectType . " Action = " . $action . " Id = " . $objectId, " : " . $comment);
         } elseif (is_array($objectId) && empty($objectId)) {
             return true;
         } elseif (is_array($objectId)) {
             Splash\Client\Splash::log()
                 ->deb(
-                    "Splash Commit => ".$objectType." Action = ".$action." Ids (x".implode(
+                    "Splash Commit => " . $objectType . " Action = " . $action . " Ids (x" . implode(
                         ", ",
                         $objectId
-                    ).") ".$comment
+                    ) . ") " . $comment
                 );
         } else {
             return Splash\Client\Splash::log()
-                ->err("Splash Hook Error : Wrong Id List Given => ".print_r($objectId, true));
+                ->err("Splash Hook Error : Wrong Id List Given => " . print_r($objectId, true));
         }
 
         //====================================================================//
@@ -479,10 +485,10 @@ class SplashSync extends Module
         // Prepare User Name for Logging
         if (!empty(Context::getContext()->employee)) {
             $userName = Context::getContext()->employee->firstname;
-            $userName .= " ".Context::getContext()->employee->lastname;
+            $userName .= " " . Context::getContext()->employee->lastname;
         }
         if (!isset($userName)) {
-            $userName = $this->l('Unknown').$this->l('Employee');
+            $userName = $this->l('Unknown') . $this->l('Employee');
         }
         //====================================================================//
         // Commit Action on remotes nodes (Master & Slaves)
@@ -508,9 +514,9 @@ class SplashSync extends Module
     protected function debugHook($name, $objectId, $other = null)
     {
         if (_PS_MODE_DEV_ == true) {
-            Splash\Client\Splash::log()->war("Hook => ".$name." => Id ".$objectId);
+            Splash\Client\Splash::log()->war("Hook => " . $name . " => Id " . $objectId);
             if (!empty($other)) {
-                Splash\Client\Splash::log()->war("Raw => ".print_r($other, true));
+                Splash\Client\Splash::log()->war("Raw => " . print_r($other, true));
             }
 
             return true;
@@ -827,6 +833,25 @@ class SplashSync extends Module
             ],
         ];
 
+        $fields[] = [
+            'type' => 'switch',
+            'label' => $this->l("Set online_only to 1 by default when creating a new product from the store"),
+            'name' => 'SPLASHMBW_DEFAULT_ONLINEONLY',
+            'is_bool' => true,
+            'values' => [
+                [
+                    'id' => 'active_on',
+                    'value' => 1,
+                    'label' => $this->l('Yes'),
+                ],
+                [
+                    'id' => 'active_off',
+                    'value' => 0,
+                    'label' => $this->l('No'),
+                ],
+            ],
+        ];
+
         //====================================================================//
         // Init Form array
         $output = array();
@@ -907,7 +932,7 @@ class SplashSync extends Module
         $output = null;
         //====================================================================//
         // Verify Form was Submited
-        if (!Tools::isSubmit('submit'.$this->name)) {
+        if (!Tools::isSubmit('submit' . $this->name)) {
             return $output;
         }
         //====================================================================//
@@ -969,6 +994,7 @@ class SplashSync extends Module
         /* MBW Custom values */
         Configuration::updateValue('SPLASHMBW_IS_RECIPIENT', Tools::getValue('SPLASHMBW_IS_RECIPIENT'));
         Configuration::updateValue('SPLASHMBW_DESC_BEHAVIOR', Tools::getValue('SPLASHMBW_DESC_BEHAVIOR'));
+        Configuration::updateValue('SPLASHMBW_DEFAULT_ONLINEONLY', Tools::getValue('SPLASHMBW_DEFAULT_ONLINEONLY'));
         Configuration::updateValue('SPLASHMBW_ENABLE_JAMARKETPLACE', Tools::getValue('SPLASHMBW_ENABLE_JAMARKETPLACE'));
         Configuration::updateValue('SPLASHMBW_ERASE_CATEGORIES', Tools::getValue('SPLASHMBW_ERASE_CATEGORIES'));
         Configuration::updateValue('SPLASHMBW_TEMP_CATEGORY', Tools::getValue('SPLASHMBW_TEMP_CATEGORY'));
@@ -1011,9 +1037,9 @@ class SplashSync extends Module
     private function toggleJAMarketplaceSupport()
     {
         if (Configuration::get('SPLASHMBW_ENABLE_JAMARKETPLACE')) {
-            Db::getInstance()->execute('ALTER TABLE '._DB_PREFIX_.'product ADD `ja_shop_name` VARCHAR(255)');
+            Db::getInstance()->execute('ALTER TABLE ' . _DB_PREFIX_ . 'product ADD `ja_shop_name` VARCHAR(255)');
         } else {
-            Db::getInstance()->execute('ALTER TABLE '._DB_PREFIX_.'product DROP COLUMN `ja_shop_name`');
+            Db::getInstance()->execute('ALTER TABLE ' . _DB_PREFIX_ . 'product DROP COLUMN `ja_shop_name`');
         }
     }
 
@@ -1039,10 +1065,10 @@ class SplashSync extends Module
         $helper->identifier = 'id';
         $helper->show_toolbar = true;
         $helper->title = $this->l('Module Basics Tests');
-        $helper->table = $this->name.'_categories';
+        $helper->table = $this->name . '_categories';
 
         $helper->token = Tools::getAdminTokenLite('AdminModules');
-        $helper->currentIndex = AdminController::$currentIndex.'&configure='.$this->name;
+        $helper->currentIndex = AdminController::$currentIndex . '&configure=' . $this->name;
 
         return $helper->generateList($this->dataList, $this->fieldsList);
     }
@@ -1108,9 +1134,9 @@ class SplashSync extends Module
         //====================================================================//
         // List Objects
         //====================================================================//
-        $objectsList = count(Splash\Client\Splash::objects()).' (';
+        $objectsList = count(Splash\Client\Splash::objects()) . ' (';
         foreach (Splash\Client\Splash::objects() as $value) {
-            $objectsList .= $value.", ";
+            $objectsList .= $value . ", ";
         }
         $objectsList .= ")";
 

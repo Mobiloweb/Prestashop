@@ -92,6 +92,7 @@ trait MetaDataTrait
             ->Identifier("ja_shop_name")
             ->Name(Translate::getAdminTranslation("Shop name", "AdminShopparametersFeature"))
             ->Description($groupName . " " . Translate::getAdminTranslation("Shop name", "AdminProducts"))
+			->MicroData("http://schema.org/Product", "vendorName")
             ->Group($groupName);
     }
 
